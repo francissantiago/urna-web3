@@ -48,7 +48,6 @@ header h1 {
 header p {
   margin: 0;
   color: var(--muted);
-  max-width: 60ch;
 }
 
 .grid {
