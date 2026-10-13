@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Urna Web3 - 2º Turno On-Chain</title>
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Eleições Presidenciais Web3</h1>
+        <p>
+          Simulador didático de segundo turno on-chain: identidade criptográfica no
+          navegador, mint de 1 token de voto, UF informada pelo eleitor e
+          auditoria pública em tempo real.
+        </p>
+      </header>
+
+      <div class="aviso">
+        Projeto educacional. O identificador é hasheado no cliente e representa, de
+        forma simplificada, o papel que o Gov.br teria em uma eleição real. Não use
+        dados reais sensíveis.
+      </div>
+
+      <section class="grid">
+        <article class="painel" id="painel-identidade">
+          <h2>1. Identidade Criptográfica</h2>
+          <label for="identificador">Identificador único (didático)</label>
+          <input
+            id="identificador"
+            type="text"
+            placeholder="Ex.: eleitor-demo-001"
+            autocomplete="off"
+          />
+          <div class="acoes">
+            <button id="btn-habilitar" class="btn btn-primario" type="button">
+              Habilitar e mintar token
+            </button>
+            <button id="btn-revelar-chave" class="btn btn-secundario" type="button">
+              Revelar chave privada
+            </button>
+            <!-- <button id="btn-nova-identidade" class="btn btn-secundario" type="button">
+              Nova identidade local
+            </button> -->
+          </div>
+          <div class="meta">
+            <div>
+              <span class="rotulo">Endereço público:</span>
+              <div class="mono" id="endereco-publico">—</div>
+            </div>
+            <div>
+              <span class="rotulo">Chave privada:</span>
+              <div class="mono" id="chave-privada" data-revelada="false">
+                ••••••••••••••••••••••••••••••••
+              </div>
+            </div>
+            <div>
+              <span class="rotulo">Saldo:</span>
+              <span id="saldo-token">—</span>
+            </div>
+          </div>
+          <p class="status" id="status-identidade">Aguardando habilitação.</p>
+        </article>
+
+        <article class="painel" id="painel-urna">
+          <h2>2. Urna Web3</h2>
+          <p class="ajuda">Escolha o candidato, a UF e confirme o voto.</p>
+          <div class="candidatos">
+            <button class="btn btn-candidato" type="button" data-candidato="13">
+              <span class="codigo-legenda">13</span>
+              Lula
+            </button>
+            <button class="btn btn-candidato" type="button" data-candidato="22">
+              <span class="codigo-legenda">22</span>
+              Flávio Bolsonaro
+            </button>
+            <button class="btn btn-candidato" type="button" data-candidato="0">
+              Branco / Nulo
+            </button>
+          </div>
+          <label for="select-uf">UF do eleitor</label>
+          <select id="select-uf">
+            <option value="">Selecione o estado…</option>
+          </select>
+          <div class="acoes">
+            <button id="btn-confirmar-voto" class="btn btn-primario btn-largo" type="button">
+              Confirmar voto
+            </button>
+          </div>
+          <p class="status" id="status-urna">Selecione um candidato e a UF.</p>
+        </article>
+
+        <article class="painel painel-auditoria" id="painel-auditoria">
+          <h2>3. Auditoria On-Chain ao Vivo</h2>
+          <div class="placar">
+            <div class="placar-item">
+              <span>13 - Lula</span>
+              <strong id="total-13">0</strong>
+            </div>
+            <div class="placar-item">
+              <span>22 - Flávio Bolsonaro</span>
+              <strong id="total-22">0</strong>
+            </div>
+            <div class="placar-item">
+              <span>Branco / Nulo</span>
+              <strong id="total-branco">0</strong>
+            </div>
+          </div>
+          <div class="tabela-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Transação</th>
+                  <th>UF</th>
+                  <th>Voto</th>
+                  <th>Eleitor</th>
+                  <th>Quando</th>
+                  <th>Prova</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-votos"></tbody>
+            </table>
+          </div>
+          <p class="status" id="status-auditoria">Preparando escuta de eventos…</p>
+        </article>
+      </section>
+    </div>
+
+    <script type="module" src="./assets/js/app.js"></script>
+  </body>
+</html>

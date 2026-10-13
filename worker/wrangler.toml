@@ -1,0 +1,10 @@
+name = "urna-web3-relayer"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Segredos (não versionar):
+#   npx wrangler secret put RELAYER_PRIVATE_KEY
+#   npx wrangler secret put RPC_URL
+#   npx wrangler secret put CONTRACT_ADDRESS
+#
+# Para desenvolvimento local, use .dev.vars (veja .dev.vars.example).
