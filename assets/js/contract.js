@@ -7,6 +7,8 @@ export const ABI_ELEICAO = [
   "function votosPorUF(string,uint8) view returns (uint256)",
   "function carteiraJaHabilitada(address) view returns (bool)",
   "function identidadeJaRegistrada(bytes32) view returns (bool)",
+  "function fimVotacao() view returns (uint256)",
+  "function votacaoAberta() view returns (bool)",
   "event EleitorHabilitado(address indexed eleitor, uint256 tokensRecebidos)",
   "event VotoComputado(address indexed eleitor, uint8 indexed candidato, string uf, uint256 timestamp)",
 ];
@@ -52,6 +54,16 @@ export async function lerTotais(contrato) {
     lula: Number(lula),
     bolsonaro: Number(bolsonaro),
   };
+}
+
+/**
+ * Lê o timestamp de encerramento on-chain.
+ * @param {import("https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm").Contract} contrato
+ * @returns {Promise<number>}
+ */
+export async function lerFimVotacao(contrato) {
+  const fim = await contrato.fimVotacao();
+  return Number(fim);
 }
 
 /**

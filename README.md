@@ -65,7 +65,8 @@ Para rodar inteiramente no GitHub Pages sem depender de servidores de banco de d
 | Carteira Invisível | ethers.js (v6) | Gera o par de chaves no navegador, sem MetaMask |
 | Trava de Unicidade | Hash keccak256 (`ethers.id`) | Transforma o identificador em Nullifier Hash único |
 | UF do eleitor | `<select>` com as 27 UFs | Entrada direta da sigla antes de gravar on-chain |
-| Consenso e Dados | Solidity ^0.8.20 (Sepolia) | Mint, burn e apuração imutável |
+| Consenso e Dados | Solidity ^0.8.20 (Sepolia) | Mint, burn, prazo (`fimVotacao`) e apuração imutável |
+| Encerramento | `fimVotacao` on-chain + contador no front | 25/10/2026 17:00 (horário de Brasília); após isso `habilitar`/`votar` revertem |
 | Taxa de Rede (Gas) | Cloudflare Worker (Relayer) | Patrocina o gas das carteiras recém-criadas |
 
 > **Meta-transações:** como a carteira do eleitor nasce sem ETH, o Relayer envia a transação. O contrato autentica o eleitor pela assinatura EIP-191 (`personal_sign`) dos pedidos `habilitar` e `votar`, em vez de confiar em `msg.sender` (que seria o próprio Relayer).
@@ -117,13 +118,14 @@ npx hardhat test
 
 ### Deploy do Contrato (Sepolia)
 
-1. Configure `contracts/.env` a partir de `contracts/.env.example` (chave privada de deploy e URL RPC).
-2. Execute:
+1. Configure `contracts/.env` a partir de `contracts/.env.example` (chave privada de deploy, URL RPC e, se quiser, `FIM_VOTACAO_UNIX`).
+2. O padrão de encerramento é **25/10/2026 17:00 (horário de Brasília)** (`1792958400`).
+3. Execute:
    ```bash
    cd contracts
    npx hardhat run scripts/deploy.js --network sepolia
    ```
-3. Copie o endereço emitido para `assets/js/config.js` (`CONTRACT_ADDRESS`).
+4. Copie o endereço emitido para `assets/js/config.js` (`CONTRACT_ADDRESS`) e para o secret do Worker.
 
 ### Deploy do Relayer (Cloudflare Worker)
 

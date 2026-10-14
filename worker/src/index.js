@@ -236,6 +236,7 @@ function resumirErroRelayer(erro) {
     "UF invalida.",
     "Assinatura invalida.",
     "Eleitor invalido.",
+    "Votacao encerrada.",
   ];
   for (const msg of conhecidos) {
     if (texto.includes(msg.replace(/\.$/, ""))) {

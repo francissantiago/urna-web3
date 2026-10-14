@@ -21,6 +21,9 @@ contract EleicaoSegundoTurno {
     // Endereço já foi habilitado?
     mapping(address => bool) public carteiraJaHabilitada;
 
+    /// @notice Encerramento da votação (unix timestamp, fuso de Brasília no deploy).
+    uint256 public immutable fimVotacao;
+
     event EleitorHabilitado(address indexed eleitor, uint256 tokensRecebidos);
     event VotoComputado(
         address indexed eleitor,
@@ -28,6 +31,17 @@ contract EleicaoSegundoTurno {
         string uf,
         uint256 timestamp
     );
+
+    /// @param _fimVotacao Timestamp unix do fim (ex.: 25/10/2026 17:00 BRT = 1792958400).
+    constructor(uint256 _fimVotacao) {
+        require(_fimVotacao > block.timestamp, "Fim da votacao no passado.");
+        fimVotacao = _fimVotacao;
+    }
+
+    /// @notice Indica se a janela de votação ainda está aberta.
+    function votacaoAberta() public view returns (bool) {
+        return block.timestamp <= fimVotacao;
+    }
 
     /// @notice Registro único e recebimento automático de 1 Token de Voto.
     /// @param eleitor Endereço da carteira gerada no navegador.
@@ -38,6 +52,7 @@ contract EleicaoSegundoTurno {
         bytes32 hashIdentidadeUnica,
         bytes calldata assinatura
     ) external {
+        require(votacaoAberta(), "Votacao encerrada.");
         require(eleitor != address(0), "Eleitor invalido.");
         require(
             !identidadeJaRegistrada[hashIdentidadeUnica],
@@ -71,6 +86,7 @@ contract EleicaoSegundoTurno {
         string calldata uf,
         bytes calldata assinatura
     ) external {
+        require(votacaoAberta(), "Votacao encerrada.");
         require(eleitor != address(0), "Eleitor invalido.");
         require(
             saldoTokenVoto[eleitor] == 1,

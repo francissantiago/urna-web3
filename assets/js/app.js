@@ -2,9 +2,11 @@ import { CODIGOS_CANDIDATOS, CONFIG, NOMES_CANDIDATOS } from "./config.js";
 import {
   criarContratoLeitura,
   escutarVotos,
+  lerFimVotacao,
   lerSaldoToken,
   lerTotais,
 } from "./contract.js";
+import { iniciarContador } from "./countdown.js";
 import { resumirErroOnChain } from "./erros.js";
 import { NOMES_UF, obterUfSelecionada } from "./geo.js";
 import { enviarAoRelayer } from "./relayer.js";
@@ -27,6 +29,9 @@ let contrato = null;
 /** @type {number | null} */
 let candidatoSelecionado = null;
 
+/** @type {boolean} */
+let isVotacaoEncerrada = false;
+
 const elementos = {
   identificador: document.getElementById("identificador"),
   btnHabilitar: document.getElementById("btn-habilitar"),
@@ -44,6 +49,10 @@ const elementos = {
   total22: document.getElementById("total-22"),
   tabelaVotos: document.getElementById("tabela-votos"),
   statusAuditoria: document.getElementById("status-auditoria"),
+  contadorRestante: document.getElementById("contador-restante"),
+  contadorRotulo: document.getElementById("contador-rotulo"),
+  contadorFim: document.getElementById("contador-fim"),
+  painelContador: document.getElementById("painel-contador"),
 };
 
 /**
@@ -54,6 +63,7 @@ async function iniciarAplicacao() {
   ethers = await import("https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm");
   preencherSeletorUf();
   ligarEventosUi();
+  await iniciarContadorVotacao();
 
   try {
     contrato = criarContratoLeitura(ethers);
@@ -64,6 +74,64 @@ async function iniciarAplicacao() {
     definirTexto(
       elementos.statusAuditoria,
       erro instanceof Error ? erro.message : "Contrato ainda não configurado."
+    );
+  }
+}
+
+/**
+ * Lê o fim on-chain (ou usa o fallback do config) e liga o contador.
+ * @returns {Promise<void>}
+ */
+async function iniciarContadorVotacao() {
+  let fimUnix = CONFIG.FIM_VOTACAO_UNIX;
+  try {
+    if (!contrato) {
+      contrato = criarContratoLeitura(ethers);
+    }
+    fimUnix = await lerFimVotacao(contrato);
+  } catch {
+    // Mantém fallback de config.js até o novo contrato com fimVotacao ser implantado.
+  }
+
+  if (elementos.contadorFim) {
+    elementos.contadorFim.textContent = `Encerra em ${CONFIG.FIM_VOTACAO_ROTULO}`;
+  }
+
+  iniciarContador({
+    fimUnix,
+    elementoRestante: elementos.contadorRestante,
+    elementoRotulo: elementos.contadorRotulo,
+    aoMudarEstado: definirEstadoEncerramento,
+  });
+}
+
+/**
+ * @param {boolean} encerrada
+ */
+function definirEstadoEncerramento(encerrada) {
+  isVotacaoEncerrada = encerrada;
+  elementos.painelContador?.classList.toggle("is-encerrada", encerrada);
+
+  if (elementos.btnHabilitar instanceof HTMLButtonElement) {
+    elementos.btnHabilitar.disabled = encerrada;
+  }
+  if (elementos.btnConfirmarVoto instanceof HTMLButtonElement) {
+    elementos.btnConfirmarVoto.disabled = encerrada;
+  }
+  if (elementos.selectUf instanceof HTMLSelectElement) {
+    elementos.selectUf.disabled = encerrada;
+  }
+  document.querySelectorAll("[data-candidato]").forEach((botao) => {
+    if (botao instanceof HTMLButtonElement) {
+      botao.disabled = encerrada;
+    }
+  });
+
+  if (encerrada) {
+    definirTexto(
+      elementos.statusUrna,
+      "Votação encerrada. Habilitação e votos não são mais aceitos.",
+      { isErro: true }
     );
   }
 }
@@ -115,6 +183,9 @@ function ligarEventosUi() {
 
 async function aoHabilitar() {
   try {
+    if (isVotacaoEncerrada) {
+      throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
+    }
     if (!ethers) {
       throw new Error("Biblioteca ethers ainda não carregou.");
     }
@@ -225,6 +296,9 @@ function aoRevelarChave() {
 
 async function aoConfirmarVoto() {
   try {
+    if (isVotacaoEncerrada) {
+      throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
+    }
     if (!ethers || !identidadeAtual) {
       throw new Error("Habilite sua identidade criptográfica antes de votar.");
     }

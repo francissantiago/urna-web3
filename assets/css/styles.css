@@ -314,3 +314,49 @@ a {
   color: #fde68a;
   font-size: 0.9rem;
 }
+
+.contador-painel {
+  margin-top: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px solid #1d4ed866;
+  background: linear-gradient(135deg, #172554cc, #0f172acc);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+}
+
+.contador-painel.is-encerrada {
+  border-color: #7f1d1d99;
+  background: linear-gradient(135deg, #450a0acc, #0f172acc);
+}
+
+.contador-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contador-rotulo {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.contador-valor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  letter-spacing: 0.04em;
+  color: #93c5fd;
+}
+
+.contador-valor.contador-encerrado {
+  color: #fca5a5;
+}
+
+.contador-fim {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

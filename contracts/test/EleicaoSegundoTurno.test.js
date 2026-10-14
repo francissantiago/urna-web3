@@ -1,5 +1,8 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
+
+/** 25/10/2026 17:00 BRT — usado nos testes como fim padrão. */
+const FIM_VOTACAO = 1792958400;
 
 function montarHashHabilitacao(eleitor, hashIdentidade) {
   return ethers.solidityPackedKeccak256(
@@ -35,6 +38,13 @@ async function votar(contrato, relayer, eleitor, candidato, uf) {
     .votar(eleitor.address, candidato, uf, assinatura);
 }
 
+async function implantar(fimVotacao = FIM_VOTACAO) {
+  const Fabrica = await ethers.getContractFactory("EleicaoSegundoTurno");
+  const contrato = await Fabrica.deploy(fimVotacao);
+  await contrato.waitForDeployment();
+  return contrato;
+}
+
 describe("EleicaoSegundoTurno", function () {
   let contrato;
   let relayer;
@@ -45,15 +55,18 @@ describe("EleicaoSegundoTurno", function () {
 
   beforeEach(async function () {
     [relayer, eleitorA, eleitorB] = await ethers.getSigners();
-    const Fabrica = await ethers.getContractFactory("EleicaoSegundoTurno");
-    contrato = await Fabrica.deploy();
-    await contrato.waitForDeployment();
+    contrato = await implantar();
 
     hashA = ethers.id("eleitor-a_SALT_ELEICAO_2026");
     hashB = ethers.id("eleitor-b_SALT_ELEICAO_2026");
   });
 
   describe("caminho feliz", function () {
+    it("grava fimVotacao e mantém votacaoAberta", async function () {
+      expect(await contrato.fimVotacao()).to.equal(BigInt(FIM_VOTACAO));
+      expect(await contrato.votacaoAberta()).to.equal(true);
+    });
+
     it("habilita eleitor, faz mint de 1 token, queima no voto e conta por UF", async function () {
       await expect(habilitar(contrato, relayer, eleitorA, hashA))
         .to.emit(contrato, "EleitorHabilitado")
@@ -145,6 +158,23 @@ describe("EleicaoSegundoTurno", function () {
           .connect(relayer)
           .habilitarEleitor(eleitorA.address, hashA, assinaturaAlheia)
       ).to.be.revertedWith("Assinatura invalida.");
+    });
+
+    it("recusa habilitação e voto após o fim", async function () {
+      await habilitar(contrato, relayer, eleitorA, hashA);
+
+      const bloco = await ethers.provider.getBlock("latest");
+      const salto = FIM_VOTACAO - Number(bloco.timestamp) + 1;
+      await network.provider.send("evm_increaseTime", [salto]);
+      await network.provider.send("evm_mine");
+
+      expect(await contrato.votacaoAberta()).to.equal(false);
+      await expect(votar(contrato, relayer, eleitorA, 13, "SP")).to.be.revertedWith(
+        "Votacao encerrada."
+      );
+      await expect(habilitar(contrato, relayer, eleitorB, hashB)).to.be.revertedWith(
+        "Votacao encerrada."
+      );
     });
   });
 });

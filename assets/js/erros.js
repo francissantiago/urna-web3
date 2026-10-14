@@ -79,6 +79,8 @@ function mapearMensagemConhecida(mensagem) {
     ["UF invalida", "UF inválida."],
     ["Assinatura invalida", "Assinatura inválida. Tente habilitar/votar novamente."],
     ["Eleitor invalido", "Endereço do eleitor inválido."],
+    ["Votacao encerrada", "A votação foi encerrada. Não é mais possível habilitar ou votar."],
+    ["Fim da votacao no passado", "Data de encerramento inválida no deploy do contrato."],
   ];
 
   for (const [trecho, amigavel] of mapa) {
