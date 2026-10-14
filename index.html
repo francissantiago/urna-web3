@@ -17,9 +17,40 @@
         </p>
       </header>
 
+      <div class="legenda-dicas" aria-label="Legenda das dicas">
+        <span class="legenda-item">
+          <span class="dica-botao dica-real" aria-hidden="true">i</span>
+          Como seria no <strong>mundo real</strong>
+        </span>
+        <span class="legenda-item">
+          <span class="dica-botao dica-chain" aria-hidden="true">i</span>
+          Como a <strong>blockchain</strong> trata neste PoC
+        </span>
+      </div>
+
       <div class="contador-painel" id="painel-contador" aria-live="polite">
         <div class="contador-texto">
-          <span class="contador-rotulo" id="contador-rotulo">Tempo restante até o encerramento</span>
+          <span class="contador-rotulo-linha">
+            <span class="contador-rotulo" id="contador-rotulo">Tempo restante até o encerramento</span>
+            <span class="dicas-grupo">
+              <span class="dica">
+                <button type="button" class="dica-botao dica-real" aria-expanded="false" aria-label="Prazo no mundo real">i</button>
+                <span class="dica-balao dica-balao-real" role="tooltip">
+                  Em uma eleição oficial, abertura e fechamento das urnas seguem o
+                  calendário do TSE e horário sincronizado nacionalmente — não o
+                  relógio de uma página web.
+                </span>
+              </span>
+              <span class="dica">
+                <button type="button" class="dica-botao dica-chain" aria-expanded="false" aria-label="Prazo na blockchain">i</button>
+                <span class="dica-balao dica-balao-chain" role="tooltip">
+                  O contrato guarda <code>fimVotacao</code> (imutável). Depois desse
+                  instante, <code>habilitarEleitor</code> e <code>votar</code> revertem
+                  com “Votacao encerrada”, usando <code>block.timestamp</code> da rede.
+                </span>
+              </span>
+            </span>
+          </span>
           <strong class="contador-valor" id="contador-restante">--:--:--</strong>
         </div>
         <p class="contador-fim" id="contador-fim">
@@ -30,12 +61,37 @@
       <div class="aviso">
         Projeto educacional. O identificador é hasheado no cliente e representa, de
         forma simplificada, o papel que o Gov.br teria em uma eleição real. Não use
-        dados reais sensíveis.
+        dados reais sensíveis. Há um par de dicas <strong>i</strong> em cada bloco
+        principal (azul = mundo real, amarelo = blockchain).
       </div>
 
       <section class="grid">
         <article class="painel" id="painel-identidade">
-          <h2>1. Identidade Criptográfica</h2>
+          <h2>
+            1. Identidade Criptográfica
+            <span class="dicas-grupo">
+              <span class="dica">
+                <button type="button" class="dica-botao dica-real" aria-expanded="false" aria-label="Identidade no mundo real">i</button>
+                <span class="dica-balao dica-balao-real" role="tooltip">
+                  Unicidade viria do cadastro eleitoral + autenticação forte (biometria
+                  do TSE, ICP-Brasil ou Gov.br), com credencial anônima: prova que você
+                  é apto sem expor o CPF na urna. A chave nunca ficaria em texto numa
+                  página — sim em hardware seguro ou custódia controlada.
+                </span>
+              </span>
+              <span class="dica">
+                <button type="button" class="dica-botao dica-chain" aria-expanded="false" aria-label="Identidade na blockchain">i</button>
+                <span class="dica-balao dica-balao-chain" role="tooltip">
+                  O navegador cria carteira + <em>nullifier</em>
+                  <code>keccak256(identificador + salt)</code>. Ao habilitar, o contrato
+                  faz <strong>mint</strong> de 1 token
+                  (<code>saldoTokenVoto = 1</code>) e marca hash/endereço como usados.
+                  O texto digitado não sobe on-chain; a chave privada só assina no
+                  cliente. Identificador livre é didático — não impede Sybil.
+                </span>
+              </span>
+            </span>
+          </h2>
           <label for="identificador">Identificador único (didático)</label>
           <input
             id="identificador"
@@ -50,9 +106,6 @@
             <button id="btn-revelar-chave" class="btn btn-secundario" type="button">
               Revelar chave privada
             </button>
-            <!-- <button id="btn-nova-identidade" class="btn btn-secundario" type="button">
-              Nova identidade local
-            </button> -->
           </div>
           <div class="meta">
             <div>
@@ -74,7 +127,30 @@
         </article>
 
         <article class="painel" id="painel-urna">
-          <h2>2. Urna Web3</h2>
+          <h2>
+            2. Urna Web3
+            <span class="dicas-grupo">
+              <span class="dica">
+                <button type="button" class="dica-botao dica-real" aria-expanded="false" aria-label="Urna no mundo real">i</button>
+                <span class="dica-balao dica-balao-real" role="tooltip">
+                  A urna física/eletrônica registra o voto na seção, com mesários e
+                  fiscalização. Depois do “CONFIRMA”, não se vota de novo. Estatísticas
+                  regionais existem, mas o sigilo do voto individual é regra — não se
+                  publica GPS nem o vínculo pessoa↔escolha.
+                </span>
+              </span>
+              <span class="dica">
+                <button type="button" class="dica-botao dica-chain" aria-expanded="false" aria-label="Urna na blockchain">i</button>
+                <span class="dica-balao dica-balao-chain" role="tooltip">
+                  <code>votar</code> valida prazo, token, candidato (0/13/22), UF e
+                  assinatura; faz <strong>burn</strong> (<code>saldo = 0</code>); soma em
+                  <code>totalVotos</code> e <code>votosPorUF</code>; emite
+                  <code>VotoComputado</code>. Só a sigla da UF vai on-chain — nunca
+                  coordenadas. O Relayer apenas paga o gas.
+                </span>
+              </span>
+            </span>
+          </h2>
           <p class="ajuda">Escolha o candidato, a UF e confirme o voto.</p>
           <div class="candidatos">
             <button class="btn btn-candidato" type="button" data-candidato="13">
@@ -102,7 +178,29 @@
         </article>
 
         <article class="painel painel-auditoria" id="painel-auditoria">
-          <h2>3. Auditoria On-Chain ao Vivo</h2>
+          <h2>
+            3. Auditoria On-Chain ao Vivo
+            <span class="dicas-grupo">
+              <span class="dica">
+                <button type="button" class="dica-botao dica-real" aria-expanded="false" aria-label="Auditoria no mundo real">i</button>
+                <span class="dica-balao dica-balao-real" role="tooltip">
+                  Transparência oficial passa por boletim de urna, totalização, partidos
+                  e órgãos de controle. O conjunto é auditável; o voto nominal de cada
+                  eleitor permanece secreto.
+                </span>
+              </span>
+              <span class="dica">
+                <button type="button" class="dica-botao dica-chain" aria-expanded="false" aria-label="Auditoria na blockchain">i</button>
+                <span class="dica-balao dica-balao-chain" role="tooltip">
+                  O placar lê <code>totalVotos</code> no contrato. A tabela escuta o
+                  evento <code>VotoComputado</code>; o link da transação abre o
+                  Etherscan. “Token queimado” = saldo zerado na mesma tx. Neste PoC o
+                  evento mostra endereço, UF e candidato (didático; eleição real usaria
+                  zk para ocultar a escolha).
+                </span>
+              </span>
+            </span>
+          </h2>
           <div class="placar">
             <div class="placar-item">
               <span>13 - Lula</span>

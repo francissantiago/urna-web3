@@ -67,6 +67,8 @@ header p {
 }
 
 .painel {
+  position: relative;
+  overflow: visible;
   background: color-mix(in srgb, var(--panel) 92%, white 8%);
   border: 1px solid var(--panel-border);
   border-radius: 1rem;
@@ -77,6 +79,10 @@ header p {
 .painel h2 {
   margin: 0 0 1rem;
   font-size: 1.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 label {
@@ -359,4 +365,161 @@ a {
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.contador-rotulo-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.legenda-dicas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--panel-border);
+  background: #0a1020aa;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.legenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.legenda-item .dica-botao {
+  pointer-events: none;
+  cursor: default;
+}
+
+.label-com-dica {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dicas-grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  vertical-align: middle;
+}
+
+.dicas-inline {
+  align-self: center;
+}
+
+.dica {
+  position: relative;
+  display: inline-flex;
+}
+
+.dica-botao {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+
+.dica-botao:hover {
+  transform: none;
+  filter: brightness(1.08);
+}
+
+.dica-real {
+  background: #1d4ed8;
+  border-color: #60a5fa;
+  color: #eff6ff;
+}
+
+.dica-chain {
+  background: #a16207;
+  border-color: #fbbf24;
+  color: #fffbeb;
+}
+
+.dica-balao {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  width: min(20rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: 0 12px 32px #00000088;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.dica-balao::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-left: inherit;
+  border-top: inherit;
+  left: var(--seta-x, 50%);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.dica-balao[data-lado="abaixo"]::before {
+  top: -6px;
+}
+
+.dica-balao[data-lado="acima"]::before {
+  bottom: -6px;
+  border-left: none;
+  border-top: none;
+  border-right: inherit;
+  border-bottom: inherit;
+}
+
+.dica.is-aberta .dica-balao {
+  display: block;
+}
+
+.dica-balao-real {
+  background: #1e3a8a;
+  border: 1px solid #93c5fd;
+  color: #dbeafe;
+}
+
+.dica-balao-chain {
+  background: #713f12;
+  border: 1px solid #fde68a;
+  color: #fef3c7;
+}
+
+.dica-balao code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  word-break: break-word;
 }

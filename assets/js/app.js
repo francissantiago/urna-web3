@@ -7,6 +7,7 @@ import {
   lerTotais,
 } from "./contract.js";
 import { iniciarContador } from "./countdown.js";
+import { ligarDicas } from "./dicas.js";
 import { resumirErroOnChain } from "./erros.js";
 import { NOMES_UF, obterUfSelecionada } from "./geo.js";
 import { enviarAoRelayer } from "./relayer.js";
@@ -66,6 +67,7 @@ async function iniciarAplicacao() {
   ethers = await import("https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm");
   preencherSeletorUf();
   ligarEventosUi();
+  ligarDicas();
   await iniciarContadorVotacao();
 
   try {
