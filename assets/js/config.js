@@ -6,7 +6,7 @@ export const CONFIG = {
   CHAIN_ID: 11155111,
   NETWORK_NAME: "Sepolia",
   RPC_URL: "https://ethereum-sepolia-rpc.publicnode.com",
-  CONTRACT_ADDRESS: "0x8cc9f1Ede4368D39Cae377f8ac6E2daC36c5CE23",
+  CONTRACT_ADDRESS: "0x00428Ae3dd5EA546637E66464B88d65f305E048A",
   RELAYER_URL: "https://urna-web3-relayer.urnaweb3.workers.dev",
   ETHERSCAN_TX_BASE: "https://sepolia.etherscan.io/tx/",
   SALT_IDENTIDADE: "_SALT_ELEICAO_2026",
