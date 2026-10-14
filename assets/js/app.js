@@ -32,6 +32,9 @@ let candidatoSelecionado = null;
 /** @type {boolean} */
 let isVotacaoEncerrada = false;
 
+/** @type {boolean} */
+let isAcaoEmAndamento = false;
+
 const elementos = {
   identificador: document.getElementById("identificador"),
   btnHabilitar: document.getElementById("btn-habilitar"),
@@ -111,21 +114,7 @@ async function iniciarContadorVotacao() {
 function definirEstadoEncerramento(encerrada) {
   isVotacaoEncerrada = encerrada;
   elementos.painelContador?.classList.toggle("is-encerrada", encerrada);
-
-  if (elementos.btnHabilitar instanceof HTMLButtonElement) {
-    elementos.btnHabilitar.disabled = encerrada;
-  }
-  if (elementos.btnConfirmarVoto instanceof HTMLButtonElement) {
-    elementos.btnConfirmarVoto.disabled = encerrada;
-  }
-  if (elementos.selectUf instanceof HTMLSelectElement) {
-    elementos.selectUf.disabled = encerrada;
-  }
-  document.querySelectorAll("[data-candidato]").forEach((botao) => {
-    if (botao instanceof HTMLButtonElement) {
-      botao.disabled = encerrada;
-    }
-  });
+  atualizarControlesInterativos();
 
   if (encerrada) {
     definirTexto(
@@ -133,6 +122,53 @@ function definirEstadoEncerramento(encerrada) {
       "Votação encerrada. Habilitação e votos não são mais aceitos.",
       { isErro: true }
     );
+  }
+}
+
+/**
+ * Desabilita controles de voto/habilitação durante ações ou após o encerramento.
+ */
+function atualizarControlesInterativos() {
+  const bloquear = isVotacaoEncerrada || isAcaoEmAndamento;
+
+  if (elementos.btnHabilitar instanceof HTMLButtonElement) {
+    elementos.btnHabilitar.disabled = bloquear;
+  }
+  if (elementos.btnConfirmarVoto instanceof HTMLButtonElement) {
+    elementos.btnConfirmarVoto.disabled = bloquear;
+  }
+  if (elementos.btnNovaIdentidade instanceof HTMLButtonElement) {
+    elementos.btnNovaIdentidade.disabled = isAcaoEmAndamento;
+  }
+  if (elementos.selectUf instanceof HTMLSelectElement) {
+    elementos.selectUf.disabled = bloquear;
+  }
+  if (elementos.identificador instanceof HTMLInputElement) {
+    elementos.identificador.disabled = isAcaoEmAndamento;
+  }
+  document.querySelectorAll("[data-candidato]").forEach((botao) => {
+    if (botao instanceof HTMLButtonElement) {
+      botao.disabled = bloquear;
+    }
+  });
+}
+
+/**
+ * Executa uma ação assíncrona bloqueando a UI até terminar.
+ * @param {() => Promise<void>} acao
+ * @returns {Promise<void>}
+ */
+async function comUiBloqueada(acao) {
+  if (isAcaoEmAndamento) {
+    return;
+  }
+  isAcaoEmAndamento = true;
+  atualizarControlesInterativos();
+  try {
+    await acao();
+  } finally {
+    isAcaoEmAndamento = false;
+    atualizarControlesInterativos();
   }
 }
 
@@ -182,53 +218,55 @@ function ligarEventosUi() {
 }
 
 async function aoHabilitar() {
-  try {
-    if (isVotacaoEncerrada) {
-      throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
-    }
-    if (!ethers) {
-      throw new Error("Biblioteca ethers ainda não carregou.");
-    }
-    const identificador = /** @type {HTMLInputElement} */ (elementos.identificador).value;
-    identidadeAtual = montarIdentidade(ethers, identificador);
-    atualizarPainelIdentidade(identidadeAtual, null);
+  await comUiBloqueada(async () => {
+    try {
+      if (isVotacaoEncerrada) {
+        throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
+      }
+      if (!ethers) {
+        throw new Error("Biblioteca ethers ainda não carregou.");
+      }
+      const identificador = /** @type {HTMLInputElement} */ (elementos.identificador).value;
+      identidadeAtual = montarIdentidade(ethers, identificador);
+      atualizarPainelIdentidade(identidadeAtual, null);
 
-    definirTexto(elementos.statusIdentidade, "Assinando e enviando habilitação ao Relayer...");
-    const assinatura = await assinarHabilitacao(
-      ethers,
-      identidadeAtual.carteira,
-      identidadeAtual.hashIdentidade
-    );
+      definirTexto(elementos.statusIdentidade, "Assinando e enviando habilitação ao Relayer...");
+      const assinatura = await assinarHabilitacao(
+        ethers,
+        identidadeAtual.carteira,
+        identidadeAtual.hashIdentidade
+      );
 
-    const { txHash } = await enviarAoRelayer("habilitar", {
-      eleitor: identidadeAtual.enderecoPublico,
-      hashIdentidade: identidadeAtual.hashIdentidade,
-      assinatura,
-    });
+      const { txHash } = await enviarAoRelayer("habilitar", {
+        eleitor: identidadeAtual.enderecoPublico,
+        hashIdentidade: identidadeAtual.hashIdentidade,
+        assinatura,
+      });
 
-    definirTexto(
-      elementos.statusIdentidade,
-      `Habilitado. Transação: ${txHash.slice(0, 10)}…`
-    );
+      definirTexto(
+        elementos.statusIdentidade,
+        `Habilitado. Transação: ${txHash.slice(0, 10)}…`
+      );
 
-    if (contrato) {
-      const saldo = await lerSaldoToken(contrato, identidadeAtual.enderecoPublico);
-      atualizarPainelIdentidade(identidadeAtual, saldo);
-      await atualizarPlacar();
-    } else {
-      atualizarPainelIdentidade(identidadeAtual, 1);
+      if (contrato) {
+        const saldo = await lerSaldoToken(contrato, identidadeAtual.enderecoPublico);
+        atualizarPainelIdentidade(identidadeAtual, saldo);
+        await atualizarPlacar();
+      } else {
+        atualizarPainelIdentidade(identidadeAtual, 1);
+      }
+    } catch (erro) {
+      if (identidadeAtual) {
+        definirTexto(elementos.saldoToken, "—");
+        elementos.saldoToken?.classList.remove("token-ativo", "token-queimado");
+      }
+      definirTexto(
+        elementos.statusIdentidade,
+        mensagemErro(erro, "Falha ao habilitar eleitor."),
+        { isErro: true }
+      );
     }
-  } catch (erro) {
-    if (identidadeAtual) {
-      definirTexto(elementos.saldoToken, "—");
-      elementos.saldoToken?.classList.remove("token-ativo", "token-queimado");
-    }
-    definirTexto(
-      elementos.statusIdentidade,
-      mensagemErro(erro, "Falha ao habilitar eleitor."),
-      { isErro: true }
-    );
-  }
+  });
 }
 
 function aoNovaIdentidadeLocal() {
@@ -295,52 +333,54 @@ function aoRevelarChave() {
 }
 
 async function aoConfirmarVoto() {
-  try {
-    if (isVotacaoEncerrada) {
-      throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
-    }
-    if (!ethers || !identidadeAtual) {
-      throw new Error("Habilite sua identidade criptográfica antes de votar.");
-    }
-    if (candidatoSelecionado === null) {
-      throw new Error('Selecione 13 (Lula), 22 (Flávio Bolsonaro) ou Branco/Nulo.');
-    }
-    const ufSelecionada = obterUfSelecionada(
-      /** @type {HTMLSelectElement} */ (elementos.selectUf).value
-    );
+  await comUiBloqueada(async () => {
+    try {
+      if (isVotacaoEncerrada) {
+        throw new Error("A votação foi encerrada. Não é mais possível habilitar ou votar.");
+      }
+      if (!ethers || !identidadeAtual) {
+        throw new Error("Habilite sua identidade criptográfica antes de votar.");
+      }
+      if (candidatoSelecionado === null) {
+        throw new Error('Selecione 13 (Lula), 22 (Flávio Bolsonaro) ou Branco/Nulo.');
+      }
+      const ufSelecionada = obterUfSelecionada(
+        /** @type {HTMLSelectElement} */ (elementos.selectUf).value
+      );
 
-    definirTexto(elementos.statusUrna, "Assinando voto e enviando ao Relayer...");
-    const assinatura = await assinarVoto(
-      ethers,
-      identidadeAtual.carteira,
-      candidatoSelecionado,
-      ufSelecionada
-    );
+      definirTexto(elementos.statusUrna, "Assinando voto e enviando ao Relayer...");
+      const assinatura = await assinarVoto(
+        ethers,
+        identidadeAtual.carteira,
+        candidatoSelecionado,
+        ufSelecionada
+      );
 
-    const { txHash } = await enviarAoRelayer("votar", {
-      eleitor: identidadeAtual.enderecoPublico,
-      candidato: candidatoSelecionado,
-      uf: ufSelecionada,
-      assinatura,
-    });
+      const { txHash } = await enviarAoRelayer("votar", {
+        eleitor: identidadeAtual.enderecoPublico,
+        candidato: candidatoSelecionado,
+        uf: ufSelecionada,
+        assinatura,
+      });
 
-    definirTexto(
-      elementos.statusUrna,
-      `Voto registrado. Transação: ${txHash.slice(0, 10)}…`
-    );
+      definirTexto(
+        elementos.statusUrna,
+        `Voto registrado. Transação: ${txHash.slice(0, 10)}…`
+      );
 
-    if (contrato) {
-      const saldo = await lerSaldoToken(contrato, identidadeAtual.enderecoPublico);
-      atualizarPainelIdentidade(identidadeAtual, saldo);
-      await atualizarPlacar();
-    } else {
-      atualizarPainelIdentidade(identidadeAtual, 0);
+      if (contrato) {
+        const saldo = await lerSaldoToken(contrato, identidadeAtual.enderecoPublico);
+        atualizarPainelIdentidade(identidadeAtual, saldo);
+        await atualizarPlacar();
+      } else {
+        atualizarPainelIdentidade(identidadeAtual, 0);
+      }
+    } catch (erro) {
+      definirTexto(elementos.statusUrna, mensagemErro(erro, "Falha ao registrar o voto."), {
+        isErro: true,
+      });
     }
-  } catch (erro) {
-    definirTexto(elementos.statusUrna, mensagemErro(erro, "Falha ao registrar o voto."), {
-      isErro: true,
-    });
-  }
+  });
 }
 
 /**
